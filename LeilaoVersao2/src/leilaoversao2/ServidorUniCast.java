@@ -10,10 +10,13 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.UnknownHostException;
 import java.security.PublicKey;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static leilaoversao2.LeilaoVersao2.assinatura;
@@ -37,6 +40,8 @@ public class ServidorUniCast extends Thread {
     Processo process = null;
     String MULT_IP = null;
     int MULT_PORT = 0;
+    static Map<String,String> vivos = new HashMap<String,String>();
+    static String  vivo = null;
 
     /**
      * Contrutor da Classe ServidorUnicast
@@ -67,6 +72,16 @@ public class ServidorUniCast extends Thread {
 
     @Override
     public void run() {
+        // ********************************************
+        // Instanciado thread
+        WatchDog watchdog;
+        try {
+            watchdog = new WatchDog(socket, InetAddress.getLocalHost(), process.getPort(), process.getId());
+            watchdog.start();
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(ServidorUniCast.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
 
         byte[] buffer;
         DatagramPacket messageIn;
@@ -95,7 +110,6 @@ public class ServidorUniCast extends Thread {
                 ois = new ObjectInputStream(bis);
                 type = ois.readChar();
 
-                System.out.println();
                 switch (type) {
 
                     case ('N'):
@@ -116,7 +130,7 @@ public class ServidorUniCast extends Thread {
 
                         // *********************************************
                         // Adicionando aminha Lista de Produtos produto recebido
-                        adicionaListaDeProdutos(process.getId(), listaProduto);
+//                        adicionaListaDeProdutos(process.getId(), listaProduto);
 
                         // *********************************************
                         // Gerando Hash Map Encripta
@@ -241,7 +255,6 @@ public class ServidorUniCast extends Thread {
                         port = ois.readUTF();
                         Produto meuProduto = (Produto) ois.readObject();
 
-                        System.out.println("depois");
 
                         System.out.print("[UNICAST - Recebe]");
                         System.out.print(" ID do participante: " + pid);
@@ -261,6 +274,29 @@ public class ServidorUniCast extends Thread {
                         System.out.println(" ID do participante deu lance maior: " + pid);
                         System.out.print(", Valor do ultimo lance:  " + novoValor);
 
+                        break;
+                   case ('K'):
+                        // *********************************************
+                        // Usuario nao autenticado
+                        pid = ois.readUTF();
+                        System.out.println("Nao foi possivel realizar seu lance assinatura errada!");
+                        break;
+                        
+                    case ('W'):
+                        // *********************************************
+                        // Envia resposta para watchdoog
+                        pid = ois.readUTF();
+                        if (!process.getId().equals(pid)) {
+                            port = ois.readUTF();
+                            repostaWatch(process.getId(), port);
+                        }
+                        break;
+                    case ('R'):
+                        // *********************************************
+                        // Confimar que esta vivo             
+                        pid = ois.readUTF();
+                        setVivo(pid);
+                        vivos.put(pid, "true");
                         break;
 
                 }
@@ -283,22 +319,19 @@ public class ServidorUniCast extends Thread {
 
     public void repostaWatch(String id, String port) throws IOException {
 
-        System.out.println("");
-        System.out.print("[UNIACAST - Enviando]");
-
         // *********************************************
-        // Packing transaction validation.
+        // Envia confirmacao recebeu  o unicast
         ByteArrayOutputStream bos = new ByteArrayOutputStream(10);
         ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeChar('U');
-        oos.writeUTF(id);
+        oos.writeChar('R');
+        oos.writeUTF(process.getId());
         oos.flush();
 
         byte[] output = bos.toByteArray();
         DatagramPacket request = new DatagramPacket(output, output.length, InetAddress.getLocalHost(), Integer.parseInt(port));
         socket.send(request);
-
     }
+
 
     public void atualizaValorCliente(String id, String idProduto, String novoValor) throws IOException {
 
@@ -448,6 +481,22 @@ public class ServidorUniCast extends Thread {
             }
         }
 
+    }
+    
+    synchronized public static String getVivo() {
+        return vivo;
+    }
+
+    synchronized public static void setVivo(String vivo) {
+        ServidorUniCast.vivo = vivo;
+    }
+
+    public static Map<String, String> getVivos() {
+        return vivos;
+    }
+
+    public static void setVivos(Map<String, String> vivos) {
+        ServidorUniCast.vivos = vivos;
     }
 
 }

@@ -96,8 +96,7 @@ public class Cronometro extends Thread {
             ByteArrayOutputStream bos1 = new ByteArrayOutputStream(10);
             ObjectOutputStream oos1 = new ObjectOutputStream(bos1);
             oos1.writeChar('F');
-            System.out.println(ProcessoVencedorId);
-            System.out.println(ProcessoVencedorPort);
+
 
             oos1.writeUTF(leiloeroId);
             oos1.writeUTF(ProcessoVencedorId);
@@ -124,6 +123,7 @@ public class Cronometro extends Thread {
             ByteArrayOutputStream bos = new ByteArrayOutputStream(10);
             ObjectOutputStream oos = new ObjectOutputStream(bos);
             oos.writeChar('R');
+            oos.writeUTF(leiloeroId);
             oos.writeUTF(ProcessoVencedorId);
             oos.writeUTF(product.getId());
             oos.flush();
@@ -138,6 +138,7 @@ public class Cronometro extends Thread {
                        break;
                 }
             }
+            
         } catch (InterruptedException e) {
         } catch (IOException ex) {
             Logger.getLogger(Cronometro.class.getName()).log(Level.SEVERE, null, ex);

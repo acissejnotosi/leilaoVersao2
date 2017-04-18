@@ -20,11 +20,14 @@ import java.net.UnknownHostException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static leilaoversao2.LeilaoVersao2.assinatura;
+import static leilaoversao2.LeilaoVersao2.listaProcessosLeiloeros;
 
 import static leilaoversao2.LeilaoVersao2.procesosInteresados;
 import static leilaoversao2.LeilaoVersao2.processList;
@@ -45,6 +48,7 @@ public class ServidorMultiCast extends Thread {
     DatagramSocket socket = null;
     String ipMulticast = null;
     int portMulticast = 0;
+
 
     /**
      * construtor do servidor multicast
@@ -190,15 +194,16 @@ public class ServidorMultiCast extends Thread {
                     case 'R':
                         // *********************************************
                         // Recebe o ID do processo vencedor e do produto leiloado
+                        String leiloeiroID = ois.readUTF();
                         String vencedorID = ois.readUTF();
                         String produtoID = ois.readUTF();
-
                         // *********************************************
                         // Atualizando Novo Proprietario                        
                         System.out.print("[MULTICAST - Envia]");
                         System.out.print(" ID do participante: " + vencedorID);
-                        atualizaProprientario(process.getId(), vencedorID, produtoID);
+                        atualizaProprientario(leiloeiroID, vencedorID, produtoID);
 
+                        atualizaListadeLeiloeiros(leiloeiroID);
                         break;
 
                     case 'S':
@@ -313,6 +318,7 @@ public class ServidorMultiCast extends Thread {
                     if (prodL.getId().equals(idProduto)) {
                         product = prodL;
                         pL.getListaProdutosLeiloando().remove(prodL);
+
                         break;
                     }
                 }
@@ -327,6 +333,20 @@ public class ServidorMultiCast extends Thread {
             }
 
         }
+    }
+
+    public void atualizaListadeLeiloeiros(String LeiloeiroID) {
+        for (Processo p : listaProcessosLeiloeros) {
+            if (p.getId().equals(LeiloeiroID)) {
+                if (p.getListaProdutosLeiloando().size() == 0) {
+                    listaProcessosLeiloeros.remove(p);
+                    break;
+                }
+
+            }
+
+        }
+
     }
 
     /**
@@ -368,5 +388,5 @@ public class ServidorMultiCast extends Thread {
 
         return null;
     }
-    
+
 }
