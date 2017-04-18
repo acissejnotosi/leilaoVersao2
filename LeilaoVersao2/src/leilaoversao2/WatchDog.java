@@ -17,10 +17,11 @@ import java.net.MulticastSocket;
 import java.sql.Timestamp;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static leilaoversao2.LeilaoVersao2.listaProcessosLeiloeros;
 import static leilaoversao2.LeilaoVersao2.processList;
+import static leilaoversao2.LeilaoVersao2.setStop;
 import static leilaoversao2.ServidorUniCast.getVivo;
 import static leilaoversao2.ServidorUniCast.vivos;
-
 
 /**
  *
@@ -78,12 +79,21 @@ public class WatchDog extends Thread {
                                         Thread.sleep(200);
                                     }
                                     if (!vivos.get(p.getId()).equals("true")) {
-                                        System.out.println("--------------------------------------- SAIU" + p.getId());
+                                        System.out.println("-----SAIU" + p.getId());
+                                        for (Processo leiloaroes : listaProcessosLeiloeros) {
+                                            if (leiloaroes.getId().equals(p)) {
+                                                if (p.isAtivo()) {
+                                                    setStop(true);
+                                                }
+                                                listaProcessosLeiloeros.remove(p);
+                                                break;
+                                            }
+                                        }
                                         processList.remove(p);
-                                           
                                         // *********************************************
                                         // colocar remover da lista de leiloadores
                                         break;
+
                                     }
 
                                 }

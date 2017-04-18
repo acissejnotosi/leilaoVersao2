@@ -19,6 +19,7 @@ import java.net.SocketException;
 import java.security.PublicKey;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static leilaoversao2.LeilaoVersao2.isStop;
 
 import static leilaoversao2.LeilaoVersao2.procesosInteresados;
 import static leilaoversao2.LeilaoVersao2.processList;
@@ -59,13 +60,19 @@ public class Cronometro extends Thread {
         DatagramPacket messageIn;
         ByteArrayInputStream bis;
         ObjectInputStream ois;
-
+       
         try {
             int i = 0;
             while (i < 1) {
                 i++;
-                Thread.sleep(10000);
+                Thread.sleep(12000);
+                if(isStop()){
+                    System.out.println("-----------------");
+                    break;
+                }
             }
+            if(!isStop()){
+            System.out.println("ENtreiasdasdasd");
 //              Procurando produtos
             Produto product = null;
             for (Processo p : processList) {
@@ -138,7 +145,11 @@ public class Cronometro extends Thread {
                        break;
                 }
             }
+        }else{
             
+                System.out.println(" Teriimoasdasd"
+                        + "asd");
+            }
         } catch (InterruptedException e) {
         } catch (IOException ex) {
             Logger.getLogger(Cronometro.class.getName()).log(Level.SEVERE, null, ex);

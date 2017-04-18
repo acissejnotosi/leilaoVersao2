@@ -25,6 +25,7 @@ import static leilaoversao2.LeilaoVersao2.listaProcessosLeiloeros;
 import static leilaoversao2.LeilaoVersao2.procesosInteresados;
 import static leilaoversao2.LeilaoVersao2.processList;
 import static leilaoversao2.LeilaoVersao2.produtosLancados;
+import static leilaoversao2.LeilaoVersao2.setStop;
 
 /**
  * Classe para o recebimento das mensagens Unicast.
@@ -158,7 +159,7 @@ public class ServidorUniCast extends Thread {
                         String lance = ois.readUTF();
                         idProduto = ois.readUTF(); //Id produto do processo atual(leiloero)
                         Integer tamanho = ois.read();//Id produto do processo atual(leiloero)
-
+                         setStop(false);
                         // *********************************************
                         // Lendo byte array
                         byte[] mensagemCripto = new byte[tamanho];
@@ -217,6 +218,11 @@ public class ServidorUniCast extends Thread {
                                 cont.getLancadorId().add(pid);
                                 cont.setUltimo(pid);
                                 procesosInteresados.add(cont);
+                            }
+                            for(Processo proce: processList){
+                                if(proce.getId().equals(process.getId())){
+                                    proce.setAtivo(true);
+                                }
                             }
                                 
                             //atualiza valores de preco local

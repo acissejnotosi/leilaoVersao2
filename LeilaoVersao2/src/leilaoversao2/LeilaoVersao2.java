@@ -32,7 +32,7 @@ public class LeilaoVersao2 {
     static ArrayList<Processo> processList = new ArrayList<>();
     static List<Controle> procesosInteresados = new ArrayList<>();
     static List<String> produtosLancados = new ArrayList<>();
-       
+    static boolean stop = false;
     static List<Processo> listaProcessosLeiloeros = new ArrayList<>();
     static Map<String, Autenticacao> assinatura = new HashMap<String, Autenticacao>();
     static PublicKey mychavePublica = null;
@@ -554,5 +554,14 @@ public class LeilaoVersao2 {
         }
         return false;
     }
+
+    synchronized public static boolean isStop() {
+        return stop;
+    }
+
+    synchronized public static void setStop(boolean stop) {
+      LeilaoVersao2.stop = stop;
+    }
+    
 
 }

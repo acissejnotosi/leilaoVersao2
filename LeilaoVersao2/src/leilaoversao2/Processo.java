@@ -18,6 +18,7 @@ class Processo implements Serializable {
     private List<Produto> listaProdutosLeiloando;
     private PublicKey chavePublica;
     private PrivateKey chavePrivada;
+    public boolean ativo;
 
     /**
      * Construtor da classe Processo
@@ -164,5 +165,15 @@ class Processo implements Serializable {
     public void setChavePublica(PublicKey chavePublica) {
         this.chavePublica = chavePublica;
     }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+    
+    
 
 }
