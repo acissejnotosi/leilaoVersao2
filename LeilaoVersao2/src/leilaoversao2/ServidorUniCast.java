@@ -25,7 +25,7 @@ import static leilaoversao2.LeilaoVersao2.listaProcessosLeiloeros;
 import static leilaoversao2.LeilaoVersao2.procesosInteresados;
 import static leilaoversao2.LeilaoVersao2.processList;
 import static leilaoversao2.LeilaoVersao2.produtosLancados;
-import static leilaoversao2.LeilaoVersao2.setStop;
+
 
 /**
  * Classe para o recebimento das mensagens Unicast.
@@ -43,6 +43,7 @@ public class ServidorUniCast extends Thread {
     int MULT_PORT = 0;
     static Map<String,String> vivos = new HashMap<String,String>();
     static String  vivo = null;
+    static boolean stop = false;
 
     /**
      * Contrutor da Classe ServidorUnicast
@@ -166,7 +167,8 @@ public class ServidorUniCast extends Thread {
                         for (int i = 0; i < tamanho; i++) {
                             mensagemCripto[i] = ois.readByte();
                         }
-
+                        String temp = ois.readUTF();
+                        int tempo = Integer.parseInt(temp);
                         PublicKey chavePublica1 = assinatura.get(pid).getPublic_chave();
 
                         // *********************************************
@@ -217,6 +219,7 @@ public class ServidorUniCast extends Thread {
                                 cont.setLancadorId(new ArrayList<>());
                                 cont.getLancadorId().add(pid);
                                 cont.setUltimo(pid);
+                                cont.setPrecoFinal(lance);
                                 procesosInteresados.add(cont);
                             }
                             for(Processo proce: processList){
@@ -228,8 +231,9 @@ public class ServidorUniCast extends Thread {
                             //atualiza valores de preco local
                             atualizaPrecoProdutoLocal(idProduto, lance);
 
-                            Cronometro cro = new Cronometro(socket, idProduto, process.getId(), s, group, MULT_PORT);
+                            Cronometro cro = new Cronometro(socket, idProduto, process.getId(), s, group, MULT_PORT,tempo);
                             cro.start();
+                           
                             System.out.println("Leilao Inicializado produtoID:" + idProduto);
                             /// Enviando atualizacao de preco para todo multicast 
                             atualizaValorCliente(pid, idProduto, lance);
@@ -238,6 +242,7 @@ public class ServidorUniCast extends Thread {
                             System.out.println("Lancar Notificaçao para outro interesado");
 //                            notificacaParaCliente(pid,port,idProduto,lance);
                             for (Controle c : procesosInteresados) {
+                                c.setPrecoFinal(lance);
                                 if (c.getProdutoId().equals(idProduto)) {
                                     for (String ids : c.getLancadorId()) {
                                         if (!ids.equals(pid)) {
@@ -304,6 +309,7 @@ public class ServidorUniCast extends Thread {
                         setVivo(pid);
                         vivos.put(pid, "true");
                         break;
+
 
                 }
 
@@ -504,5 +510,14 @@ public class ServidorUniCast extends Thread {
     public static void setVivos(Map<String, String> vivos) {
         ServidorUniCast.vivos = vivos;
     }
+
+    public static boolean isStop() {
+        return stop;
+    }
+
+    public static void setStop(boolean stop) {
+        ServidorUniCast.stop = stop;
+    }
+    
 
 }

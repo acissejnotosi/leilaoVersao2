@@ -19,10 +19,10 @@ import java.net.SocketException;
 import java.security.PublicKey;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static leilaoversao2.LeilaoVersao2.isStop;
 
 import static leilaoversao2.LeilaoVersao2.procesosInteresados;
 import static leilaoversao2.LeilaoVersao2.processList;
+import static leilaoversao2.ServidorUniCast.isStop;
 
 /**
  * Classe utilzada para gerenciar o leilão e determinar quando este irá
@@ -40,16 +40,18 @@ public class Cronometro extends Thread {
     String ProcessoVencedorId = null;
     String ProcessoVencedorPort = null;
     int MULT_PORT = 0;
+    int tempo;
 
     InetAddress group = null;
 
-    Cronometro(DatagramSocket socket, String idProduto, String leiloeroId, MulticastSocket s, InetAddress group, int MULT_PORT) {
+    Cronometro(DatagramSocket socket, String idProduto, String leiloeroId, MulticastSocket s, InetAddress group, int MULT_PORT,int tempo) {
         this.socket = socket;
         this.idProduto = idProduto;
         this.leiloeroId = leiloeroId;
         this.s = s;
         this.group = group;
         this.MULT_PORT = MULT_PORT;
+        this.tempo = tempo;
     }
 
     @Override
@@ -60,19 +62,15 @@ public class Cronometro extends Thread {
         DatagramPacket messageIn;
         ByteArrayInputStream bis;
         ObjectInputStream ois;
-       
+
         try {
             int i = 0;
-            while (i < 1) {
+            while (i < tempo) {
                 i++;
-                Thread.sleep(12000);
-                if(isStop()){
-                    System.out.println("-----------------");
-                    break;
-                }
+                Thread.sleep(59000);
+
             }
-            if(!isStop()){
-            System.out.println("ENtreiasdasdasd");
+            
 //              Procurando produtos
             Produto product = null;
             for (Processo p : processList) {
@@ -86,13 +84,16 @@ public class Cronometro extends Thread {
                     }
                 }
             }
-            System.out.println("Tempo de leilao Finalizado!");
+            boolean verificador = false;
+          
             for (Controle c : procesosInteresados) {
                 if (c.getProdutoId().equals(idProduto)) {
                     for (Processo p : processList) {
                         if (p.getId().equals(c.getUltimo())) {
                             ProcessoVencedorId = c.getUltimo();
                             ProcessoVencedorPort = p.getPort();
+                            product.setPrecoInicial(c.getPrecoFinal());
+                            verificador = true;
                             break;
                         }
                     }
@@ -100,55 +101,57 @@ public class Cronometro extends Thread {
             }
             // *********************************************
             // 
-            ByteArrayOutputStream bos1 = new ByteArrayOutputStream(10);
-            ObjectOutputStream oos1 = new ObjectOutputStream(bos1);
-            oos1.writeChar('F');
+            if (verificador) {
+                  System.out.println("Tempo de leilao Finalizado!");
+                ByteArrayOutputStream bos1 = new ByteArrayOutputStream(10);
+                ObjectOutputStream oos1 = new ObjectOutputStream(bos1);
+                oos1.writeChar('F');
 
+                oos1.writeUTF(leiloeroId);
+                oos1.writeUTF(ProcessoVencedorId);
+                oos1.writeUTF(ProcessoVencedorPort);
+                oos1.writeObject(product);
+                oos1.flush();
 
-            oos1.writeUTF(leiloeroId);
-            oos1.writeUTF(ProcessoVencedorId);
-            oos1.writeUTF(ProcessoVencedorPort);
-            oos1.writeObject(product);
-            oos1.flush();
+                byte[] output = bos1.toByteArray();
+                DatagramPacket request = new DatagramPacket(output, output.length, InetAddress.getLocalHost(), Integer.parseInt(ProcessoVencedorPort));
+                System.out.println("");
+                System.out.print("[UNICAST - enviado]");
+                System.out.print("Vencedor do leilo: " + ProcessoVencedorId);
+                System.out.print("Produto arrematado:" + idProduto);
+                socket.send(request);
 
-            byte[] output = bos1.toByteArray();
-            DatagramPacket request = new DatagramPacket(output, output.length, InetAddress.getLocalHost(), Integer.parseInt(ProcessoVencedorPort));
-            System.out.println("");
-            System.out.print("[UNICAST - enviado]");
-            System.out.print("Vencedor do leilo: " + ProcessoVencedorId);
-            System.out.print("Produto arrematado:" + idProduto);
-            socket.send(request);
+                System.out.println("");
 
-            System.out.println("");
-
-            System.out.println("");
-            System.out.print("[MULTICAST - enviando]");
-            System.out.print("Atualiza valores de produto");
+                System.out.println("");
+                System.out.print("[MULTICAST - enviando]");
+                System.out.print("Atualiza valores de produto");
 
             // *********************************************
-            // Empacotando mensagem
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(10);
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeChar('R');
-            oos.writeUTF(leiloeroId);
-            oos.writeUTF(ProcessoVencedorId);
-            oos.writeUTF(product.getId());
-            oos.flush();
+                // Empacotando mensagem
+                ByteArrayOutputStream bos = new ByteArrayOutputStream(10);
+                ObjectOutputStream oos = new ObjectOutputStream(bos);
+                oos.writeChar('R');
+                oos.writeUTF(leiloeroId);
+                oos.writeUTF(ProcessoVencedorId);
+                oos.writeUTF(product.getId());
+                System.out.println("--------------Preco final"+product.getPrecoInicial());
+                oos.writeUTF(product.getPrecoInicial());
+                oos.flush();
 
-            byte[] m1 = bos.toByteArray();
-            DatagramPacket messageOut = new DatagramPacket(m1, m1.length, group, MULT_PORT);
-            s.send(messageOut);
+                byte[] m1 = bos.toByteArray();
+                DatagramPacket messageOut = new DatagramPacket(m1, m1.length, group, MULT_PORT);
+                s.send(messageOut);
 
-            for (Controle c : procesosInteresados) {
-                if (c.getProdutoId().equals(idProduto)) {
-                       procesosInteresados.remove(c);
-                       break;
+                for (Controle c : procesosInteresados) {
+                    if (c.getProdutoId().equals(idProduto)) {
+                        procesosInteresados.remove(c);
+                        break;
+                    }
                 }
-            }
-        }else{
-            
-                System.out.println(" Teriimoasdasd"
-                        + "asd");
+
+            }else{
+                System.out.println("Cliente saiu!");
             }
         } catch (InterruptedException e) {
         } catch (IOException ex) {

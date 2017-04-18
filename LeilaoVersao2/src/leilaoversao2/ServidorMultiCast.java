@@ -197,11 +197,12 @@ public class ServidorMultiCast extends Thread {
                         String leiloeiroID = ois.readUTF();
                         String vencedorID = ois.readUTF();
                         String produtoID = ois.readUTF();
+                        String valorFinal = ois.readUTF();
                         // *********************************************
                         // Atualizando Novo Proprietario                        
                         System.out.print("[MULTICAST - Envia]");
                         System.out.print(" ID do participante: " + vencedorID);
-                        atualizaProprientario(leiloeiroID, vencedorID, produtoID);
+                        atualizaProprientario(leiloeiroID, vencedorID, produtoID,valorFinal);
 
                         atualizaListadeLeiloeiros(leiloeiroID);
                         break;
@@ -308,7 +309,7 @@ public class ServidorMultiCast extends Thread {
      * @param idProcesso
      * @param idProduto
      */
-    public static void atualizaProprientario(String leiloeiroID, String vencedorID, String idProduto) {
+    public static void atualizaProprientario(String leiloeiroID, String vencedorID, String idProduto,String valorFinal) {
 
         Produto product = null;
 
@@ -328,6 +329,7 @@ public class ServidorMultiCast extends Thread {
 
         for (Processo pL : processList) {
             if (pL.getId().equals(vencedorID)) {
+                product.setTempoFinal(valorFinal);
                 pL.getListaProduto().add(product);
                 break;
             }

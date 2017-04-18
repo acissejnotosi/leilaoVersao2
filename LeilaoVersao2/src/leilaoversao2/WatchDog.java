@@ -19,8 +19,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import static leilaoversao2.LeilaoVersao2.listaProcessosLeiloeros;
 import static leilaoversao2.LeilaoVersao2.processList;
-import static leilaoversao2.LeilaoVersao2.setStop;
 import static leilaoversao2.ServidorUniCast.getVivo;
+import static leilaoversao2.ServidorUniCast.setStop;
 import static leilaoversao2.ServidorUniCast.vivos;
 
 /**
@@ -84,6 +84,7 @@ public class WatchDog extends Thread {
                                             if (leiloaroes.getId().equals(p)) {
                                                 if (p.isAtivo()) {
                                                     setStop(true);
+                                                    System.out.println("------------------  --------");
                                                 }
                                                 listaProcessosLeiloeros.remove(p);
                                                 break;

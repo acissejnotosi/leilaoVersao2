@@ -19,6 +19,7 @@ public class Controle {
    private long tempo;
    private boolean tempoFinalizado = false;
    private String ultimo;
+   private String precoFinal;
 
     /**
      * Construtor da Classe Controle
@@ -109,6 +110,15 @@ public class Controle {
     public void setTempoFinalizado(boolean tempoFinalizado) {
         this.tempoFinalizado = tempoFinalizado;
     }
+
+    public String getPrecoFinal() {
+        return precoFinal;
+    }
+
+    public void setPrecoFinal(String precoFinal) {
+        this.precoFinal = precoFinal;
+    }
+    
     
     
    
