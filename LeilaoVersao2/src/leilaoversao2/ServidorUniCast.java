@@ -265,6 +265,7 @@ public class ServidorUniCast extends Thread {
                         pid = ois.readUTF();
                         port = ois.readUTF();
                         Produto meuProduto = (Produto) ois.readObject();
+                        atualizaPrecoProdutoLocal(meuProduto.getId(),meuProduto.getPrecoInicial());
 
 
                         System.out.print("[UNICAST - Recebe]");
